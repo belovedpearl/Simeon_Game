@@ -2,8 +2,10 @@
  * @jest-environment jsdom
  */
 
-const { game, newGame, showScore, addTurn, lightsOn, showTurns } = require("../game");
+const { game, newGame, showScore, addTurn, lightsOn, showTurns, playerTurn } = require("../game");
 
+jest.spyOn(window, "alert").mockImplementation(() => { });
+//jest.spyOn(window, "alert").mockImplementation(() => { });
 
 beforeAll(() => {
     let fs = require("fs");
@@ -23,6 +25,12 @@ describe("game object contains correct keys", () => {
     test("playerMoves key exists", () => {
         expect("playerMoves" in game).toBe(true);
     });
+    test("lastButton key exist", () => {
+        expect("lastButton" in game).toBe(true)
+    })
+    test("turnInProgress key exist", () => {
+        expect("turnInProgress" in game).toBe(true)
+    })
     test("choices key exists", () => {
         expect("choices" in game).toBe(true);
     });
@@ -55,6 +63,13 @@ describe("newGame works correctly", () => {
     test("should be one move in the computer game array", () => {
         expect (game.currentGame.length).toBe(1);
     });
+    test("expect dat-listener to be true", () => {
+        const elements = document.getElementsByClassName("circle");
+        for (let element of elements){
+            expect (element.getAttribute("data-listener")).toEqual("true"); 
+        }
+        
+    });
 });
 
 describe("game play works correctly", () => {
@@ -86,4 +101,24 @@ describe("game play works correctly", () => {
     test("turnNumber key exists", () => {
         expect("turnNumber" in game).toBe(true);
     });
-})
+    test("should increment the score if the turn is correct", () => {
+        game.playerMoves.push(game.currentGame[0]);
+        playerTurn();
+        expect(game.score).toBe(1)
+    });
+    test("should call an alert if the move was wrong", () => {
+        game.playerMoves.push("wrong");
+        playerTurn();
+        expect(window.alert).toBeCalledWith("Wrong Move!")
+    });
+    test("should identify when its computer turn", () => {
+        showTurns()
+        expect(game.turnInProgress).toBe(true)
+    })
+    test("clicking during computer sequence should fail", () => {
+        showTurns();
+        game.lastButton = "";
+        document.getElementById("button2").click();
+        expect(game.lastButton).toEqual("");
+    })
+});
